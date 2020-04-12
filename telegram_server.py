@@ -7,7 +7,7 @@ from data.telegram_bot_data import TOKEN_FOR_TELEGRAM_BOT
 from telegram.ext import Updater, MessageHandler, Filters, ConversationHandler
 from telegram.ext import CommandHandler
 from data.telegram_bot_data import sessionStorage
-
+FLASK_SERVER = "FLASK_SERVER = https://flask-server-myeng.herokuapp.com"
 reply_keyboard = [["1000 слов на английском - 80 % английского"],
                   ["сериал Friends"],
                   ["Сериалы с субтитрами"],
@@ -94,7 +94,7 @@ class RegisterForm:
 def register(update, context):
     mes = update.message.text.strip()
     user_id = update.message.from_user.id
-    res = get(f"http://localhost:5000/api/users/{user_id}").json()
+    res = get(f"{FLASK_SERVER}/api/users/{user_id}").json()
     if res["message"] == 'ok':
         update.message.reply_text("У вас уже есть аккаунт!")
         sessionStorage[user_id]["login_stage"] = 0
@@ -163,7 +163,7 @@ def register(update, context):
     except Exception:
         a = False
     if a:
-        res = post('http://localhost:5000/api/users', json={
+        res = post(f'{FLASK_SERVER}/api/users', json={
             'id': user_id,
             'name': data.name,
             'surname': data.surname,
@@ -175,7 +175,7 @@ def register(update, context):
             'telegram_name': nick,
         }).json()
     else:
-        res = post('http://localhost:5000/api/users', json={
+        res = post(f'{FLASK_SERVER}/api/users', json={
             'id': user_id,
             'name': data.name,
             'surname': data.surname,
@@ -201,7 +201,7 @@ def login(update, context):
         return 2
     else:
         given_password = mes
-        res = get(f"http://localhost:5000/api/users/{user_id}").json()
+        res = get(f"{FLASK_SERVER}/api/users/{user_id}").json()
         if res['message'] == "ok":
             if res['user_data']['password'] == given_password:
                 sessionStorage[user_id]['login_stage'] = 0
@@ -219,7 +219,7 @@ def login(update, context):
 def start(update, context):
     update.message.reply_text("Я работаю")
     user_id = update.message.from_user.id
-    res = get(f"http://localhost:5000/api/users/{user_id}").json()
+    res = get(f"{FLASK_SERVER}/api/users/{user_id}").json()
     if res["message"] == 'ok':
         update.message.reply_text(
             "У вас уже есть аккаунт, \n"
@@ -290,7 +290,7 @@ def get_other_links(update, context):
 
 
 def get_people_to_chat(update, context):
-    res = get("http://localhost:5000/api/users").json()
+    res = get(f"{FLASK_SERVER}/api/users").json()
     text = "Вот люди, с которыми с ты можешь пообщаться." \
            "\nНайди их по никнейму, добавив в начало поиска '@'"
     leng = len(res['users'])
@@ -341,7 +341,7 @@ def get_lesson(update, context):
         sessionStorage[user_id]['lesson_stage'] = 0
         sessionStorage[user_id]['test_stage'] = -1
         sessionStorage[user_id]['section_info_checked'] = 0
-        sessionStorage[user_id]['user_data'] = get(f"http://localhost:5000/api/users/{user_id}").json()['user_data']
+        sessionStorage[user_id]['user_data'] = get(f"{FLASK_SERVER}/api/users/{user_id}").json()['user_data']
         if sessionStorage[user_id]['user_data']['aim'][-1] == ',':
             sessionStorage[user_id]['user_data']['aim'] = sessionStorage[user_id]['user_data']['aim'][:-1]
 
@@ -432,7 +432,7 @@ def get_lesson(update, context):
             sessionStorage[user_id]['lesson_stage'] = 0
             sessionStorage[user_id]['test_stage'] = -1
             sessionStorage[user_id]['section_info_checked'] = 0
-            sessionStorage[user_id]['user_data'] = get(f"http://localhost:5000/api/users/{user_id}").json()['user_data']
+            sessionStorage[user_id]['user_data'] = get(f"{FLASK_SERVER}/api/users/{user_id}").json()['user_data']
             if sessionStorage[user_id]['user_data']['aim'][-1] == ',':
                 sessionStorage[user_id]['user_data']['aim'] = sessionStorage[user_id]['user_data']['aim'][:-1]
 
@@ -516,7 +516,7 @@ def change_aim(update, context):
     user_id = update.message.from_user.id
     mes = update.message.text.strip().lower()
     from data.english_data import WORDS_FOR_LEARNING
-    user_data = get(f"http://localhost:5000/api/users/{user_id}").json()['user_data']
+    user_data = get(f"{FLASK_SERVER}/api/users/{user_id}").json()['user_data']
     if 'change_aim_stage' not in sessionStorage[user_id].keys():
         sessionStorage[user_id]['change_aim_stage'] = 0
     if sessionStorage[user_id]['change_aim_stage'] == 0:
@@ -539,9 +539,9 @@ def change_aim(update, context):
             else:
                 sections += section + ','
         sections = sections[:-1]
-        deliting = delete(f"http://localhost:5000/api/users/{user_id}").json()
+        deliting = delete(f"{FLASK_SERVER}api/users/{user_id}").json()
         print(deliting)
-        res = post('http://localhost:5000/api/users', json={
+        res = post(f'{FLASK_SERVER}/api/users', json={
             'id': user_id,
             'name': user_data['name'],
             'surname': user_data['surname'],
@@ -589,7 +589,7 @@ def get_test(user_id):
 
 
 def get_myeng_map(update, context):
-    users = get(f"http://localhost:5000/api/users").json()['users']
+    users = get(f"{FLASK_SERVER}/api/users").json()['users']
     marks = ""
     for user in users:
         request = f"http://geocode-maps.yandex.ru/1.x/?apikey=40d1649f-0493-4b70-98ba-98533de7710b&geocode" \
@@ -688,7 +688,7 @@ def run_test(update, context):
     if mes.lower() == 'назад':
         sessionStorage[user_id]['test_stage'] = -1
         sessionStorage[user_id]['section_info_checked'] = 0
-        sessionStorage[user_id]['user_data'] = get(f"http://localhost:5000/api/users/{user_id}").json()[
+        sessionStorage[user_id]['user_data'] = get(f"{FLASK_SERVER}/api/users/{user_id}").json()[
             'user_data']
         if sessionStorage[user_id]['user_data']['aim'][-1] == ',':
             sessionStorage[user_id]['user_data']['aim'] = sessionStorage[user_id]['user_data']['aim'][:-1]
@@ -719,7 +719,7 @@ def run_test(update, context):
         return 10
     if 'test_stage' not in sessionStorage[user_id].keys():
         sessionStorage[user_id]['test_stage'] = -1
-        sessionStorage[user_id]['user_data'] = get(f"http://localhost:5000/api/users/{user_id}").json()['user_data']
+        sessionStorage[user_id]['user_data'] = get(f"{FLASK_SERVER}/api/users/{user_id}").json()['user_data']
         if sessionStorage[user_id]['user_data']['aim'][-1] == ',':
             sessionStorage[user_id]['user_data']['aim'] = sessionStorage[user_id]['user_data']['aim'][:-1]
 
